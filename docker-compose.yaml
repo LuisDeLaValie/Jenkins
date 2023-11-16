@@ -1,0 +1,30 @@
+
+version: '3'
+
+services:
+  jenkins:
+    # image: jenkins/jenkins:lts
+    image: jenkins/jenkins:lts-jdk17 ##jenkins/jenkins:alpine3.18-jdk21
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+
+  jenkins-agent:
+    # image: jenkins/inbound-agent
+    build:
+      context: .
+      dockerfile: dockerfile.agent.docker
+    container_name: jenkins_agent
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_AGENT_NAME=agent-docker
+      - JENKINS_AGENT_WORKDIR=/home/jenkins/
+      - JENKINS_SECRET=bb849d9b033bfa9876b4bf7949ff489b38b85665f4e47ff279e60cf20fa04b33 
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  jenkins_data:
