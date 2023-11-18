@@ -1,40 +1,53 @@
 # name:jenkins-inbound-agent-docker
 
+# FROM jenkins/inbound-agent
 
-RUN  apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release 
-RUN  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg 
-RUN  echo \
-    "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
-    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null 
-RUN  apt-get update 
-RUN  apt-get install -y docker-ce docker-ce-cli containerd.io
+# USER root
 
-RUN usermod -aG docker jenkins
+# # Add Docker's official GPG key:
+# RUN apt-get update
+# RUN apt-get install -y ca-certificates curl gnupg
+# RUN install -m 0755 -d /etc/apt/keyrings
+# RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# RUN chmod a+r /etc/apt/keyrings/docker.gpg
 
-USER jenkins
+# # Add the repository to Apt sources:
+# RUN echo \
+#   "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+#   "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+#   tee /etc/apt/sources.list.d/docker.list > /dev/null
+# RUN apt-get update
+
+# # To install the latest version, run
+# RUN apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# RUN service docker start
+
+# # Agregar el usuario jenkins al grupo docker
+# RUN usermod -aG docker jenkins
+
+# USER jenkins
 
 
 
-
-FROM jenkins/inbound-agent
+FROM ghcr.io/cirruslabs/flutter:3.13.0
 
 USER root
 
-# Instalar dependencias necesarias
-RUN apt-get update \
-    && apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+ENV JENKINS_URL=JENKINS_URL__
+ENV JENKINS_AGENT_NAME=JENKINS_AGENT_NAME__
+ENV JENKINS_AGENT_WORKDIR=JENKINS_AGENT_WORKDIR__
+ENV JENKINS_SECRET=JENKINS_SECRET__
 
-# Instalar Docker según la documentación oficial
-RUN curl -fsSL https://get.docker.com | sh
+RUN sudo apt update \
+  && apt install -y default-jdk curl curl gnupg
 
-# Agregar el usuario jenkins al grupo docker
-RUN usermod -aG docker jenkins
+RUN echo $JENKINS_URL
+
+RUN curl -sO $JENKINS_URL/jnlpJars/agent.jar
+
+RUN java -jar agent.jar -jnlpUrl \
+    && $JENKINS_URL/computer/$JENKINS_AGENT_NAME/jenkins-agent.jnlp\
+    &&  -secret $JENKINS_SECRET -workDir "$JENKINS_AGENT_WORKDIR"
+
 
 USER jenkins
