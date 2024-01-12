@@ -1,10 +1,9 @@
-version: '3'
+version: '3.8'
 
 services:
   jenkins-docker:
     image: docker:dind
     container_name: jenkins-docker
-    restart: always
     privileged: true
     networks:
       jenkins:
@@ -17,7 +16,6 @@ services:
       - jenkins-data:/var/jenkins_home
     ports:
       - "2376:2376"
-    command: --storage-driver overlay2
 
   jenkins-blueocean:
     build: .
