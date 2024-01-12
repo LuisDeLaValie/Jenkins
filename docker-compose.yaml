@@ -12,17 +12,13 @@ services:
       - jenkins_data:/var/jenkins_home
 
   jenkins-agent:
-    # image: jenkins/inbound-agent
-    build:
-      context: .
-      dockerfile: dockerfile.agent.docker
-    container_name: jenkins_agent
+    image: flutter_jenkins_agent:1
+    container_name: flutter_jenkins_agent
     environment:
-      - DOCKER_HOST=tcp://localhost:2375
-      - JENKINS_URL=http://jenkins:8080
-      - JENKINS_AGENT_NAME=agent-docker
-      - JENKINS_AGENT_WORKDIR=/home/jenkins/
-      - JENKINS_SECRET=bb849d9b033bfa9876b4bf7949ff489b38b85665f4e47ff279e60cf20fa04b33 
+        - JENKINS_URL=http://jenkins:8080
+        - JENKINS_AGENT_NAME=agent-docker
+        - JENKINS_AGENT_WORKDIR=/home/jenkins/
+        - JENKINS_SECRET=bb849d9b033bfa9876b4bf7949ff489b38b85665f4e47ff279e60cf20fa04b33
     # volumes:
     #   - /var/run/docker.sock:/var/run/docker.sock
 
