@@ -1,32 +1,40 @@
-
-version: '3'
+version: '3.8'
 
 services:
-  jenkins:
-    image: jenkins/jenkins:lts-jdk17 ##jenkins/jenkins:alpine3.18-jdk21
-    container_name: jenkins
+  jenkins-docker:
+    image: docker:dind
+    container_name: jenkins-docker
+    privileged: true
+    networks:
+      - jenkins
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - jenkins-docker-certs:/certs/client
+      - jenkins-data:/var/jenkins_home
+    ports:
+      - "2376:2376"
+
+  jenkins-blueocean:
+    build: .
+    restart: on-failure
+    networks:
+      - jenkins
+    environment:
+      - DOCKER_HOST=tcp://jenkins-docker:2376
+      - DOCKER_CERT_PATH=/certs/client
+      - DOCKER_TLS_VERIFY=1
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - jenkins-docker-certs:/certs/client:ro
     ports:
       - "8080:8080"
       - "50000:50000"
-    volumes:
-      - jenkins_data:/var/jenkins_home
 
-  jenkins-agent:
-    # image: jenkins/inbound-agent
-    build:
-      context: .
-      dockerfile: dockerfile.agent.docker
-    container_name: jenkins_agent
-    environment:
-      - DOCKER_HOST=tcp://localhost:2375
-      - JENKINS_URL=http://jenkins:8080
-      - JENKINS_AGENT_NAME=agent-docker
-      - JENKINS_AGENT_WORKDIR=/home/jenkins/
-      - JENKINS_SECRET=bb849d9b033bfa9876b4bf7949ff489b38b85665f4e47ff279e60cf20fa04b33 
-    # volumes:
-    #   - /var/run/docker.sock:/var/run/docker.sock
-
-# docker run -v /var/run/docker.sock:/var/run/docker.sock -e DOCKER_HOST=tcp://<IP_DEL_DOCKER_HOST>:<PUERTO_DEL_DOCKER_HOST> -p 8080:8080 -p 50000:50000 jenkins/jenkins:lts
+networks:
+  jenkins:
+    # aliases: docker
 
 volumes:
-  jenkins_data:
+  jenkins-docker-certs:
+  jenkins-data:
