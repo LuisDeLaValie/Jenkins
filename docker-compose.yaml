@@ -7,9 +7,9 @@ services:
     restart: always
     privileged: true
     networks:
-      - jenkins
-    network_aliases:
-      - docker
+      jenkins:
+        aliases:
+          - docker
     environment:
       - DOCKER_TLS_CERTDIR=/certs
     volumes:
